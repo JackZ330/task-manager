@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能任务管理系统</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 32px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 24px;
+      font-size: 28px;
+    }
+
+    .add-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .add-form input[type="text"] {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .add-form input[type="text"]:focus {
+      border-color: #667eea;
+    }
+
+    .add-form select {
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .add-form button {
+      padding: 12px 24px;
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .add-form button:hover {
+      background: #5568d3;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .filter-btn {
+      padding: 8px 16px;
+      border: 2px solid #e0e0e0;
+      background: #fff;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+      background: #667eea;
+      color: #fff;
+      border-color: #667eea;
+    }
+
+    .task-list {
+      list-style: none;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+    }
+
+    .task-item:hover {
+      background: #f0f1f3;
+    }
+
+    .task-title {
+      flex: 1;
+      font-size: 15px;
+      color: #333;
+    }
+
+    .task-item.completed .task-title {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .priority-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      margin: 0 12px;
+    }
+
+    .priority-高 {
+      background: #ffe0e0;
+      color: #d63031;
+    }
+
+    .priority-中 {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .priority-低 {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .toggle-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-right: 8px;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.pending {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .toggle-btn.done {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .delete-btn {
+      padding: 6px 12px;
+      background: #ffe0e0;
+      color: #d63031;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .delete-btn:hover {
+      background: #ffcdd2;
+    }
+
+    .empty-tip {
+      text-align: center;
+      color: #999;
+      padding: 40px 0;
+      font-size: 14px;
+    }
+
+    .stats {
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📋 智能任务管理</h1>
+
+    <!-- 添加任务表单 -->
+    <div class="add-form">
+      <input type="text" id="taskInput" placeholder="输入新任务..." />
+      <select id="prioritySelect">
+        <option value="高">高优先级</option>
+        <option value="中" selected>中优先级</option>
+        <option value="低">低优先级</option>
+      </select>
+      <button onclick="addTask()">添加</button>
+    </div>
+
+    <!-- 优先级筛选 -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-priority="all" onclick="filterTasks('all')">全部</button>
+      <button class="filter-btn" data-priority="高" onclick="filterTasks('高')">高</button>
+      <button class="filter-btn" data-priority="中" onclick="filterTasks('中')">中</button>
+      <button class="filter-btn" data-priority="低" onclick="filterTasks('低')">低</button>
+    </div>
+
+    <!-- 任务列表 -->
+    <ul class="task-list" id="taskList"></ul>
+
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <script>
+    let currentFilter = 'all';
+    let tasks = [];
+
+    // 页面加载时获取任务
+    document.addEventListener('DOMContentLoaded', loadTasks);
+
+    // 回车快捷添加
+    document.getElementById('taskInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addTask();
+    });
+
+    // 统一处理接口返回：非 2xx 时把后端错误信息抛出来
+    async function readJson(res, failText) {
+      let data = null;
+      try {
+        data = await res.json();
+      } catch (e) {
+        data = null;
+      }
+      if (!res.ok) {
+        const msg = data && data.error ? data.error : 'HTTP ' + res.status;
+        throw new Error(failText + '：' + msg);
+      }
+      return data;
+    }
+
+    async function loadTasks() {
+      try {
+        const res = await fetch('/api/tasks');
+        tasks = await readJson(res, '加载失败') || [];
+        renderTasks();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function addTask() {
+      const input = document.getElementById('taskInput');
+      const priority = document.getElementById('prioritySelect').value;
+      const title = input.value.trim();
+
+      if (!title) {
+        alert('请输入任务内容');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, priority })
+        });
+        await readJson(res, '添加失败');
+        input.value = '';
+        loadTasks();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function toggleTask(id, completed) {
+      try {
+        const res = await fetch(`/api/tasks/${id}/toggle`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ completed })
+        });
+        await readJson(res, '操作失败');
+        loadTasks();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteTask(id) {
+      if (!confirm('确定删除这条任务吗？')) return;
+      try {
+        const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+        await readJson(res, '删除失败');
+        loadTasks();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function filterTasks(priority) {
+      currentFilter = priority;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.priority === priority);
+      });
+      renderTasks();
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('taskList');
+      const filtered = currentFilter === 'all'
+        ? tasks
+        : tasks.filter(t => t.priority === currentFilter);
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-tip">暂无任务，添加一条吧～</div>';
+      } else {
+        list.innerHTML = filtered.map(task => `
+          <li class="task-item ${task.completed ? 'completed' : ''}">
+            <span class="task-title">${escapeHtml(task.title)}</span>
+            <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+            <button class="toggle-btn ${task.completed ? 'done' : 'pending'}"
+                    onclick="toggleTask('${task.id}', ${task.completed})">
+              ${task.completed ? '已完成' : '未完成'}
+            </button>
+            <button class="delete-btn" onclick="deleteTask('${task.id}')">删除</button>
+          </li>
+        `).join('');
+      }
+
+      // 统计
+      const total = tasks.length;
+      const done = tasks.filter(t => t.completed).length;
+      const rate = total ? Math.round(done / total * 100) : 0;
+      document.getElementById('stats').textContent =
+        `共 ${total} 条任务 | 已完成 ${done} 条 | 完成率 ${rate}%`;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
